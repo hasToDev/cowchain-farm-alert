@@ -1,0 +1,22 @@
+workflows:
+  compile-linux:
+    instance_type: linux_x2
+    max_build_duration: 10
+    environment:
+      flutter: stable
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "*"
+          include: true
+      cancel_previous_builds: true
+    scripts:
+      - name: Install dependencies
+        script: dart pub get
+      - name: Create target directory
+        script: mkdir linux-os
+      - name: Compile executable
+        script: dart compile exe bin/cowchain_farm_alert.dart -o linux-os/cowchain
+    artifacts:
+      - linux-os/**
