@@ -58,6 +58,7 @@ void main(List<String> arguments) async {
 
   // * TEST Flag & Option
   parser.addFlag('ibiza', abbr: 'z', negatable: false);
+  parser.addFlag('estonia', abbr: 'e', negatable: false);
 
   // ? Arguments Process
   try {
@@ -202,6 +203,32 @@ void main(List<String> arguments) async {
     }
 
     // Access Test Events Handler
+    if (results['estonia']) {
+      int loops = 0;
+      while (loops < 30) {
+        loops = loops + 1;
+
+        // ! Test Read
+        // Get path
+        Directory current = Directory.current;
+        String currentPath = current.path;
+        String filePath = '$currentPath/notification/$loops.txt';
+
+        // Check file existence
+        bool isFileExist = await File(filePath).exists();
+        if (!isFileExist) {
+          stdout.writeln('file $loops.txt not exist');
+        } else {
+          // Read file
+          File myRead = File(filePath);
+          String contents = await myRead.readAsString();
+          DateTime now = DateTime.now();
+          stdout.writeln('$contents : ${now.toIso8601String()}');
+        }
+      }
+    }
+
+    // Access Test Events Handler
     if (results['ibiza']) {
       int loops = 0;
       while (loops < 30) {
@@ -240,8 +267,6 @@ void main(List<String> arguments) async {
           DateTime now = DateTime.now();
           stdout.writeln('$contents : ${now.toIso8601String()}');
         }
-
-        await Future.delayed(const Duration(seconds: 5));
       }
     }
   } catch (e) {
