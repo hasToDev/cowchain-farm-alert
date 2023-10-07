@@ -1,6 +1,7 @@
 name: cowchain_farm_alert
 description: A notification app for Cowchain Farm.
 version: 1.0.0
+publish_to: 'none'
 # repository: https://github.com/my_org/my_repo
 
 environment:
@@ -13,8 +14,8 @@ dependencies:
   provider: ^6.0.5
   stellar_flutter_sdk:
     git:
-      url: git://github.com/hasToDev/stellar_flutter_sdk.git
-      ref: fix-platform
+      url: https://github.com/hasToDev/stellar_flutter_sdk.git
+      ref: f447a6ade7db4f7c13ecd01fb5a129800d5dcec3
 
 #dependency_overrides:
 #  stellar_flutter_sdk:
