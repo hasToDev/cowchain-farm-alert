@@ -56,6 +56,9 @@ void main(List<String> arguments) async {
     help: 'Interval to call Soroban Smart Contract in seconds',
   );
 
+  // * TEST Flag & Option
+  parser.addFlag('ibiza', abbr: 'z', negatable: false);
+
   // ? Arguments Process
   try {
     ArgResults results = parser.parse(arguments);
@@ -195,6 +198,50 @@ void main(List<String> arguments) async {
           stdout.writeln('Error:\n$e\nStacktrace:\n$stacktrace');
         }
         await Future.delayed(Duration(seconds: interval.toInt()));
+      }
+    }
+
+    // Access Test Events Handler
+    if (results['ibiza']) {
+      int loops = 0;
+      while (loops < 30) {
+        await Future.delayed(const Duration(seconds: 5));
+        loops = loops + 1;
+
+        // ! Test Write
+        // Get path
+        Directory current = Directory.current;
+        String currentPath = current.path;
+        String filePath = '$currentPath/notification/$loops.txt';
+
+        // Write file
+        File myWrite = await File(filePath).create(recursive: true);
+        IOSink sink = myWrite.openWrite();
+        sink.write('test number $loops');
+        await sink.flush();
+        await sink.close();
+
+        await Future.delayed(const Duration(seconds: 5));
+
+        // ! Test Read
+        // Get path
+        current = Directory.current;
+        currentPath = current.path;
+        filePath = '$currentPath/notification/$loops.txt';
+
+        // Check file existence
+        bool isFileExist = await File(filePath).exists();
+        if (!isFileExist) {
+          stdout.writeln('file $loops.txt not exist');
+        } else {
+          // Read file
+          File myRead = File(filePath);
+          String contents = await myRead.readAsString();
+          DateTime now = DateTime.now();
+          stdout.writeln('$contents : ${now.toIso8601String()}');
+        }
+
+        await Future.delayed(const Duration(seconds: 5));
       }
     }
   } catch (e) {
