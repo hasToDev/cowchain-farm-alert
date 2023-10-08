@@ -4,6 +4,7 @@ import 'package:cowchain_farm_alert/cowchain_farm_alert.dart';
 import 'package:args/args.dart';
 import 'package:cowchain_farm_alert/soroban_events_handler.dart';
 import 'package:cowchain_farm_alert/one_signal_caller.dart';
+import 'package:cowchain_farm_alert/soroban_helper.dart';
 import 'package:http/http.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
@@ -49,6 +50,12 @@ void main(List<String> arguments) async {
     mandatory: true,
     help: 'Soroban Contract Address',
   );
+  parser.addOption(
+    'stellar-seed',
+    abbr: 'x',
+    mandatory: true,
+    help: 'Stellar Account Seed',
+  );
 
   // * HELPER Flag & Option
   parser.addFlag('help', abbr: 'h', negatable: false);
@@ -76,10 +83,12 @@ void main(List<String> arguments) async {
     // Check for mandatory fields
     bool appIdMissing = results['app-id'] == null;
     bool restApiKeyMissing = results['restapi-key'] == null;
+    bool stellarSeedMissing = results['stellar-seed'] == null;
     bool sorobanContractMissing = results['soroban-contract-address'] == null;
-    if (appIdMissing || restApiKeyMissing || sorobanContractMissing) {
+    if (appIdMissing || restApiKeyMissing || stellarSeedMissing || sorobanContractMissing) {
       if (appIdMissing) stdout.writeln('OneSignal App ID Required');
       if (restApiKeyMissing) stdout.writeln('OneSignal RestAPI Key Required');
+      if (stellarSeedMissing) stdout.writeln('Stellar Account Seed Required');
       if (sorobanContractMissing) stdout.writeln('Soroban Contract Address Required');
       return;
     }
@@ -105,6 +114,14 @@ void main(List<String> arguments) async {
         server: SorobanServer('https://soroban-testnet.stellar.org:443'),
         contractADDRESS: results['soroban-contract-address'],
         contractID: StrKey.decodeContractIdHex(results['soroban-contract-address']),
+      );
+
+      SorobanHelper horizonTestNet = SorobanHelper(
+        sdk: StellarSDK.TESTNET,
+        server: SorobanServer('https://soroban-testnet.stellar.org:443'),
+        contractADDRESS: results['soroban-contract-address'],
+        contractID: StrKey.decodeContractIdHex(results['soroban-contract-address']),
+        adminKeypair: KeyPair.fromSecretSeed(results['stellar-seed']),
       );
 
       // Listen to Cowchain Farm Contract Event
@@ -214,10 +231,10 @@ void main(List<String> arguments) async {
               }
               // remove similar job on auctionNotificationJob & finalize the auction
               for (CowchainFarmEvent event in registerJob) {
+                await horizonTestNet.invokeFinalizeAuction(auctionID: event.auctionId);
+
                 auctionNotificationJob
                     .removeWhere((v) => v.event == event.event && v.auctionId == event.auctionId);
-
-                // TODO: FINALIZE AUCTION
                 eventNumber = eventNumber + 1;
               }
 
@@ -233,9 +250,6 @@ void main(List<String> arguments) async {
               }
               // remove similar job on auctionNotificationJob & send notification
               for (CowchainFarmEvent event in refundJob) {
-                auctionNotificationJob
-                    .removeWhere((v) => v.event == event.event && v.cowId == event.cowId);
-
                 await oneSignal.createAuctionNotification(
                   httpClient: client,
                   accountID: event.bidder,
@@ -243,6 +257,8 @@ void main(List<String> arguments) async {
                   isRefund: true,
                 );
 
+                auctionNotificationJob
+                    .removeWhere((v) => v.event == event.event && v.cowId == event.cowId);
                 eventNumber = eventNumber + 1;
               }
 
@@ -258,9 +274,6 @@ void main(List<String> arguments) async {
               }
               // remove similar job on auctionNotificationJob & send notification
               for (CowchainFarmEvent event in auctionSuccessJob) {
-                auctionNotificationJob
-                    .removeWhere((v) => v.event == event.event && v.cowId == event.cowId);
-
                 await oneSignal.createAuctionNotification(
                   httpClient: client,
                   accountID: event.bidder,
@@ -275,6 +288,8 @@ void main(List<String> arguments) async {
                   isAuctionOwner: true,
                 );
 
+                auctionNotificationJob
+                    .removeWhere((v) => v.event == event.event && v.cowId == event.cowId);
                 eventNumber = eventNumber + 1;
               }
 
