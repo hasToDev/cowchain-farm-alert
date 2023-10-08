@@ -109,18 +109,23 @@ void main(List<String> arguments) async {
       List<CowchainFarmEvent> auctionNotificationJob = await readJob(jobAuction);
       List<CowchainFarmEvent> activitiesNotificationJob = await readJob(jobActivities);
 
+      SorobanServer sorobanServer = SorobanServer('https://soroban-testnet.stellar.org:443');
+      sorobanServer.dioOverrides = true;
+      String contractADDRESS = results['soroban-contract-address'];
+      String contractID = StrKey.decodeContractIdHex(results['soroban-contract-address']);
+
       SorobanEventsHandler events = SorobanEventsHandler(
         sdk: StellarSDK.TESTNET,
-        server: SorobanServer('https://soroban-testnet.stellar.org:443'),
-        contractADDRESS: results['soroban-contract-address'],
-        contractID: StrKey.decodeContractIdHex(results['soroban-contract-address']),
+        server: sorobanServer,
+        contractADDRESS: contractADDRESS,
+        contractID: contractID,
       );
 
       SorobanHelper horizonTestNet = SorobanHelper(
         sdk: StellarSDK.TESTNET,
-        server: SorobanServer('https://soroban-testnet.stellar.org:443'),
-        contractADDRESS: results['soroban-contract-address'],
-        contractID: StrKey.decodeContractIdHex(results['soroban-contract-address']),
+        server: sorobanServer,
+        contractADDRESS: contractADDRESS,
+        contractID: contractID,
         adminKeypair: KeyPair.fromSecretSeed(results['stellar-seed']),
       );
 

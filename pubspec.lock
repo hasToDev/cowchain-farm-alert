@@ -383,8 +383,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: f447a6ade7db4f7c13ecd01fb5a129800d5dcec3
-      resolved-ref: f447a6ade7db4f7c13ecd01fb5a129800d5dcec3
+      ref: "55cfe3897042c551e85f661709ceeb6bad4d3cae"
+      resolved-ref: "55cfe3897042c551e85f661709ceeb6bad4d3cae"
       url: "https://github.com/hasToDev/stellar_flutter_sdk.git"
     source: git
     version: "1.6.5"
