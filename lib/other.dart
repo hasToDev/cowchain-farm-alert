@@ -1,3 +1,5 @@
+import 'dart:io';
+
 enum CowchainFunction {
   buyCow,
   sellCow,
@@ -67,4 +69,12 @@ class AppMessages {
   static String biddingPrice = 'Please enter your bid price.';
   static String auctionStartPrice = 'Please enter your auction start price.';
   static String zeroPrice = 'The price cannot be zero.';
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
 }

@@ -7,6 +7,7 @@ import 'package:cowchain_farm_alert/one_signal_caller.dart';
 import 'package:cowchain_farm_alert/soroban_helper.dart';
 import 'package:http/http.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
+import 'package:cowchain_farm_alert/other.dart';
 
 const String jobAuction = 'auction';
 const String jobActivities = 'activities';
@@ -95,6 +96,7 @@ void main(List<String> arguments) async {
     // Access Soroban Events Handler
     if (results['soroban']) {
       // OneSignal Setup
+      HttpOverrides.global = MyHttpOverrides();
       Client client = Client();
 
       OneSignalCaller oneSignal = OneSignalCaller(
