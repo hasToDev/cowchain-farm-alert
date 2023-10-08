@@ -18,7 +18,6 @@ void main(List<String> arguments) async {
   ArgParser parser = ArgParser();
 
   // * ONE SIGNAL Flag & Option
-  parser.addFlag('onesignal', abbr: 'o', negatable: false);
   parser.addOption(
     'app-id',
     abbr: 'a',
