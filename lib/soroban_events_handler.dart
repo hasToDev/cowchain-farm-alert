@@ -97,6 +97,7 @@ class SorobanEventsHandler {
           if (v.key.sym == null) continue;
           if (v.key.sym == 'auction_id') cowchainFarmEvent.setAuctionId = v.val.str.toString();
           if (v.key.sym == 'cow_id') cowchainFarmEvent.setCowId = v.val.str.toString();
+          if (v.key.sym == 'name') cowchainFarmEvent.setCowName = v.val.sym.toString();
           if (v.key.sym == 'owner') {
             cowchainFarmEvent.owner = Address.fromXdr(v.val.address!).accountId ?? '';
           }

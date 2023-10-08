@@ -1,6 +1,6 @@
 name: cowchain_farm_alert
 description: A notification app for Cowchain Farm.
-version: 1.0.0
+version: 1.0.1
 publish_to: 'none'
 # repository: https://github.com/my_org/my_repo
 
