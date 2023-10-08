@@ -11,9 +11,11 @@ environment:
 dependencies:
   args: ^2.4.2
   http: ^1.1.0
+  fixnum: ^1.1.0
   provider: ^6.0.5
   stellar_flutter_sdk:
     git:
+      # when using CodeMagic, always use HTTPS for github instead of GIT
       url: https://github.com/hasToDev/stellar_flutter_sdk.git
       ref: f447a6ade7db4f7c13ecd01fb5a129800d5dcec3
 

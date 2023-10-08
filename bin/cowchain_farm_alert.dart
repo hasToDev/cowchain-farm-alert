@@ -7,6 +7,9 @@ import 'package:cowchain_farm_alert/one_signal_caller.dart';
 import 'package:http/http.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
+const String jobAuction = 'auction';
+const String jobActivities = 'activities';
+
 void main(List<String> arguments) async {
   exitCode = 0;
 
@@ -94,7 +97,8 @@ void main(List<String> arguments) async {
       );
 
       // Soroban Setup
-      List<CowchainFarmEvent> notificationJob = await readJob();
+      List<CowchainFarmEvent> auctionNotificationJob = await readJob(jobAuction);
+      List<CowchainFarmEvent> activitiesNotificationJob = await readJob(jobActivities);
 
       SorobanEventsHandler events = SorobanEventsHandler(
         sdk: StellarSDK.TESTNET,
@@ -110,9 +114,8 @@ void main(List<String> arguments) async {
       int nextJobLedger = 0;
 
       while (starting) {
-        // TODO: DELETE LATER
         DateTime now = DateTime.now();
-        stdout.writeln('${now.toIso8601String()} : looking for event..');
+        stdout.writeln('${now.toIso8601String()} : search event from ledger $latestLedger');
         try {
           var (
             List<CowchainFarmEvent>? resultEvent,
@@ -136,29 +139,39 @@ void main(List<String> arguments) async {
             }
 
             // Iterate Cowchain Farm event
-            // Remove event on notificationJob that has the same cowId
+            // Remove event on activitiesNotificationJob that has the same cowId
             for (CowchainFarmEvent event in resultEvent!) {
               if (event.event == 'auction') {
-                notificationJob.removeWhere((v) => v.cowId == event.cowId);
+                activitiesNotificationJob.removeWhere((v) => v.cowId == event.cowId);
               }
             }
 
-            // Update notification job
-            // Remove any sell event
-            // Save updated notification job to disk
-            notificationJob.addAll(resultEvent);
-            notificationJob.removeWhere((v) => v.event == 'sell');
-            await saveJob(notificationJob);
+            // Iterate Cowchain Farm event
+            // Separate job based on its event
+            for (CowchainFarmEvent event in resultEvent) {
+              bool isAuctionTopic =
+                  event.event == 'register' || event.event == 'refund' || event.event == 'auction';
 
-            // Run notification job
+              if (isAuctionTopic) {
+                auctionNotificationJob.add(event);
+              } else if (event.event != 'sell') {
+                activitiesNotificationJob.add(event);
+              }
+            }
+
+            // Save updated notification job to disk
+            await saveJob(auctionNotificationJob, jobAuction);
+            await saveJob(activitiesNotificationJob, jobActivities);
+
             if (latestLedger > nextJobLedger) {
-              int target =
-                  notificationJob.lastIndexWhere((v) => v.nextFedLedger <= nextJobLedger + 1);
+              // * Run notification job for All COW ACTIVITIES
+              int target = activitiesNotificationJob
+                  .lastIndexWhere((v) => v.nextFedLedger <= nextJobLedger + 1);
 
               if (target >= 0) {
                 // Split current and future job
-                List<CowchainFarmEvent> currentJob = notificationJob.sublist(0, target);
-                notificationJob = notificationJob.sublist(target);
+                List<CowchainFarmEvent> currentJob = activitiesNotificationJob.sublist(0, target);
+                activitiesNotificationJob = activitiesNotificationJob.sublist(target);
 
                 // Create job detail
                 Map<String, dynamic> jobDetail = {};
@@ -174,15 +187,14 @@ void main(List<String> arguments) async {
                   }
                 }
 
-                // TODO: DELETE LATER
                 DateTime notifyTime = DateTime.now();
                 stdout.writeln(
-                    '${notifyTime.toIso8601String()} : sending ${jobDetail.keys.length} notification..');
+                    '${notifyTime.toIso8601String()} : sending ${jobDetail.keys.length} activity..');
 
                 // Send push notification
                 for (String owner in jobDetail.keys) {
                   List<String> names = jobDetail[owner];
-                  await oneSignal.createNotification(
+                  await oneSignal.createActivityNotification(
                     httpClient: client,
                     accountID: owner,
                     cowName: names.first,
@@ -190,6 +202,85 @@ void main(List<String> arguments) async {
                   );
                 }
               }
+
+              // * Finalize auction job on REGISTER
+              int eventNumber = 0;
+              // find register event
+              List<CowchainFarmEvent> registerJob = [];
+              for (CowchainFarmEvent event in auctionNotificationJob) {
+                if (event.event == 'register' && event.auctionLimitLedger < latestLedger) {
+                  registerJob.add(event);
+                }
+              }
+              // remove similar job on auctionNotificationJob & finalize the auction
+              for (CowchainFarmEvent event in registerJob) {
+                auctionNotificationJob
+                    .removeWhere((v) => v.event == event.event && v.auctionId == event.auctionId);
+
+                // TODO: FINALIZE AUCTION
+                eventNumber = eventNumber + 1;
+              }
+
+              DateTime notifyTime = DateTime.now();
+              stdout.writeln('${notifyTime.toIso8601String()} : sending $eventNumber claim..');
+              eventNumber = 0;
+
+              // * Run notification auction job for REFUND
+              // find refund event
+              List<CowchainFarmEvent> refundJob = [];
+              for (CowchainFarmEvent event in auctionNotificationJob) {
+                if (event.event == 'refund') refundJob.add(event);
+              }
+              // remove similar job on auctionNotificationJob & send notification
+              for (CowchainFarmEvent event in refundJob) {
+                auctionNotificationJob
+                    .removeWhere((v) => v.event == event.event && v.cowId == event.cowId);
+
+                await oneSignal.createAuctionNotification(
+                  httpClient: client,
+                  accountID: event.bidder,
+                  cowName: event.cowName,
+                  isRefund: true,
+                );
+
+                eventNumber = eventNumber + 1;
+              }
+
+              notifyTime = DateTime.now();
+              stdout.writeln('${notifyTime.toIso8601String()} : sending $eventNumber refund..');
+              eventNumber = 0;
+
+              // * Run notification auction job for AUCTION
+              // find auction event
+              List<CowchainFarmEvent> auctionSuccessJob = [];
+              for (CowchainFarmEvent event in auctionNotificationJob) {
+                if (event.event == 'auction') auctionSuccessJob.add(event);
+              }
+              // remove similar job on auctionNotificationJob & send notification
+              for (CowchainFarmEvent event in auctionSuccessJob) {
+                auctionNotificationJob
+                    .removeWhere((v) => v.event == event.event && v.cowId == event.cowId);
+
+                await oneSignal.createAuctionNotification(
+                  httpClient: client,
+                  accountID: event.bidder,
+                  cowName: event.cowName,
+                  isAuctionBidder: true,
+                );
+
+                await oneSignal.createAuctionNotification(
+                  httpClient: client,
+                  accountID: event.owner,
+                  cowName: event.cowName,
+                  isAuctionOwner: true,
+                );
+
+                eventNumber = eventNumber + 1;
+              }
+
+              notifyTime = DateTime.now();
+              stdout.writeln('${notifyTime.toIso8601String()} : sending $eventNumber auction..');
+              eventNumber = 0;
 
               // Update next job ledger
               nextJobLedger = nextJobLedger + 200;
@@ -202,10 +293,11 @@ void main(List<String> arguments) async {
       }
     }
 
-    // Access Test Events Handler
+    // Access Test WRITE Events Handler
     if (results['estonia']) {
       int loops = 0;
       while (loops < 30) {
+        await Future.delayed(const Duration(seconds: 5));
         loops = loops + 1;
 
         // ! Test Read
@@ -228,7 +320,7 @@ void main(List<String> arguments) async {
       }
     }
 
-    // Access Test Events Handler
+    // Access Test READ Events Handler
     if (results['ibiza']) {
       int loops = 0;
       while (loops < 30) {
@@ -247,26 +339,6 @@ void main(List<String> arguments) async {
         sink.write('test number $loops');
         await sink.flush();
         await sink.close();
-
-        await Future.delayed(const Duration(seconds: 5));
-
-        // ! Test Read
-        // Get path
-        current = Directory.current;
-        currentPath = current.path;
-        filePath = '$currentPath/notification/$loops.txt';
-
-        // Check file existence
-        bool isFileExist = await File(filePath).exists();
-        if (!isFileExist) {
-          stdout.writeln('file $loops.txt not exist');
-        } else {
-          // Read file
-          File myRead = File(filePath);
-          String contents = await myRead.readAsString();
-          DateTime now = DateTime.now();
-          stdout.writeln('$contents : ${now.toIso8601String()}');
-        }
       }
     }
   } catch (e) {

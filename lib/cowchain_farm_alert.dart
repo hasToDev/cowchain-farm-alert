@@ -3,14 +3,14 @@ import 'dart:convert';
 
 /// [saveJob]
 /// Save notification job to disk
-Future<void> saveJob(List<CowchainFarmEvent> notificationJob) async {
+Future<void> saveJob(List<CowchainFarmEvent> notificationJob, String jobTitle) async {
   // String to write
   String json = jsonEncode(notificationJob.map((v) => v.toJson()).toList());
 
   // Get path
   Directory current = Directory.current;
   String currentPath = current.path;
-  String filePath = '$currentPath/notification/job.txt';
+  String filePath = '$currentPath/notification/$jobTitle.txt';
 
   // Write file
   File myFile = await File(filePath).create(recursive: true);
@@ -22,11 +22,11 @@ Future<void> saveJob(List<CowchainFarmEvent> notificationJob) async {
 
 /// [readJob]
 /// Read notification job from disk
-Future<List<CowchainFarmEvent>> readJob() async {
+Future<List<CowchainFarmEvent>> readJob(String jobTitle) async {
   // Get path
   Directory current = Directory.current;
   String currentPath = current.path;
-  String filePath = '$currentPath/notification/job.txt';
+  String filePath = '$currentPath/notification/$jobTitle.txt';
 
   // Check file existence
   bool isFileExist = await File(filePath).exists();
@@ -53,6 +53,10 @@ class CowchainFarmEvent {
     required this.owner,
     required this.lastFedLedger,
     required this.nextFedLedger,
+    required this.auctionId,
+    required this.bidder,
+    required this.price,
+    required this.auctionLimitLedger,
   });
 
   late String event;
@@ -61,6 +65,10 @@ class CowchainFarmEvent {
   late String owner;
   late int lastFedLedger;
   late int nextFedLedger;
+  late String auctionId;
+  late String bidder;
+  late String price;
+  late int auctionLimitLedger;
 
   set setEvent(String event) => this.event = event;
   set setCowId(String cowId) => this.cowId = cowId;
@@ -71,24 +79,23 @@ class CowchainFarmEvent {
     nextFedLedger = lastFedLedger + 4320;
   }
 
-  static CowchainFarmEvent zero() => CowchainFarmEvent(
-      event: '', cowId: '', cowName: '', owner: '', lastFedLedger: 0, nextFedLedger: 0);
+  set setAuctionId(String auctionId) => this.auctionId = auctionId;
+  set setBidder(String bidder) => this.bidder = bidder;
+  set setPrice(String price) => this.price = price;
+  set setAuctionLimitLedger(int auctionLimitLedger) => this.auctionLimitLedger = auctionLimitLedger;
 
-  bool isNoDefaultValue() {
-    try {
-      if (event == '' ||
-          cowId == '' ||
-          cowName == '' ||
-          owner == '' ||
-          lastFedLedger == 0 ||
-          nextFedLedger == 0) {
-        return false;
-      }
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
+  static CowchainFarmEvent zero() => CowchainFarmEvent(
+        event: '',
+        cowId: '',
+        cowName: '',
+        owner: '',
+        lastFedLedger: 0,
+        nextFedLedger: 0,
+        auctionId: '',
+        bidder: '',
+        price: '',
+        auctionLimitLedger: 0,
+      );
 
   factory CowchainFarmEvent.fromJson(Map<String, dynamic> json) {
     return CowchainFarmEvent(
@@ -98,6 +105,10 @@ class CowchainFarmEvent {
       owner: json['owner'],
       lastFedLedger: json['lastFedLedger'],
       nextFedLedger: json['nextFedLedger'],
+      auctionId: json['auctionId'],
+      bidder: json['bidder'],
+      price: json['price'],
+      auctionLimitLedger: json['auctionLimitLedger'],
     );
   }
 
@@ -109,6 +120,10 @@ class CowchainFarmEvent {
       'owner': owner,
       'lastFedLedger': lastFedLedger,
       'nextFedLedger': nextFedLedger,
+      'auctionId': auctionId,
+      'bidder': bidder,
+      'price': price,
+      'auctionLimitLedger': auctionLimitLedger,
     };
   }
 }

@@ -1,6 +1,8 @@
+import 'package:fixnum/fixnum.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 import 'cowchain_farm_alert.dart';
 
+const String eventTypeSystem = 'system';
 const String eventTypeContract = 'contract';
 const String eventTypeDiagnostic = 'diagnostic';
 const int firstRunLedgerOffset = 50;
@@ -47,7 +49,7 @@ class SorobanEventsHandler {
     // Create get event request
     GetEventsRequest getEventsRequest = GetEventsRequest(
       startLedger,
-      paginationOptions: [PaginationOptions(limit: 200)],
+      paginationOptions: [PaginationOptions(limit: 9000)],
       filters: [
         EventFilter(type: eventTypeContract, contractIds: [contractADDRESS]),
       ],
@@ -80,19 +82,51 @@ class SorobanEventsHandler {
       // Event data
       XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(info.value.xdr);
       if (xdrSCVal.map == null) continue;
-      for (XdrSCMapEntry v in xdrSCVal.map!) {
-        if (v.key.sym == null) continue;
-        if (v.key.sym == 'id') cowchainFarmEvent.setCowId = v.val.str.toString();
-        if (v.key.sym == 'name') cowchainFarmEvent.setCowName = v.val.sym.toString();
-        if (v.key.sym == 'owner') {
-          cowchainFarmEvent.owner = Address.fromXdr(v.val.address!).accountId ?? '';
+
+      // Filter for specific topic
+      bool isAuctionTopic = cowchainFarmEvent.event == 'register' ||
+          cowchainFarmEvent.event == 'refund' ||
+          cowchainFarmEvent.event == 'auction';
+
+      if (isAuctionTopic) {
+        // Cow Auction related function
+        for (XdrSCMapEntry v in xdrSCVal.map!) {
+          if (v.key.sym == null) continue;
+          if (v.key.sym == 'auction_id') cowchainFarmEvent.setAuctionId = v.val.str.toString();
+          if (v.key.sym == 'cow_id') cowchainFarmEvent.setCowId = v.val.str.toString();
+          if (v.key.sym == 'owner') {
+            cowchainFarmEvent.owner = Address.fromXdr(v.val.address!).accountId ?? '';
+          }
+          if (v.key.sym == 'bidder') {
+            cowchainFarmEvent.setBidder = Address.fromXdr(v.val.address!).accountId ?? '';
+          }
+          if (v.key.sym == 'price' && v.val.i128 != null) {
+            int high = v.val.i128?.hi.int64 ?? 0;
+            int low = v.val.i128?.lo.uint64 ?? 0;
+            Int64 price64 = (Int64(1000000000) * Int64(high)) + Int64(low);
+            String price = (price64 ~/ Int64(10000000)).toString();
+            if (price.isNotEmpty) cowchainFarmEvent.setPrice = price;
+          }
+          if (v.key.sym == 'auction_limit_ledger') {
+            cowchainFarmEvent.setAuctionLimitLedger = v.val.u32?.uint32 ?? 0;
+          }
         }
-        if (v.key.sym == 'last_fed_ledger') {
-          cowchainFarmEvent.setLastFedLedger = v.val.u32?.uint32 ?? 0;
+      } else {
+        // Cow Activities related function
+        for (XdrSCMapEntry v in xdrSCVal.map!) {
+          if (v.key.sym == null) continue;
+          if (v.key.sym == 'id') cowchainFarmEvent.setCowId = v.val.str.toString();
+          if (v.key.sym == 'name') cowchainFarmEvent.setCowName = v.val.sym.toString();
+          if (v.key.sym == 'owner') {
+            cowchainFarmEvent.owner = Address.fromXdr(v.val.address!).accountId ?? '';
+          }
+          if (v.key.sym == 'last_fed_ledger') {
+            cowchainFarmEvent.setLastFedLedger = v.val.u32?.uint32 ?? 0;
+          }
         }
       }
 
-      if (cowchainFarmEvent.isNoDefaultValue()) eventList.add(cowchainFarmEvent);
+      eventList.add(cowchainFarmEvent);
     }
 
     return (eventList, currentLedger, null);
