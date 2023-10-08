@@ -142,6 +142,7 @@ void main(List<String> arguments) async {
 
           if (error != null) {
             stdout.writeln(error);
+            await Future.delayed(const Duration(seconds: 5));
           } else {
             // Update latest ledger
             latestLedger = int.tryParse(currentLedger!) ?? 0;
@@ -300,11 +301,12 @@ void main(List<String> arguments) async {
               // Update next job ledger
               nextJobLedger = nextJobLedger + 200;
             }
+            await Future.delayed(Duration(seconds: interval.toInt()));
           }
         } catch (e, stacktrace) {
           stdout.writeln('Error:\n$e\nStacktrace:\n$stacktrace');
+          await Future.delayed(Duration(seconds: interval.toInt()));
         }
-        await Future.delayed(Duration(seconds: interval.toInt()));
       }
     }
 

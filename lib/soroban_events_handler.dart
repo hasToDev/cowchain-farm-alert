@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 import 'cowchain_farm_alert.dart';
@@ -26,7 +28,8 @@ class SorobanEventsHandler {
     try {
       GetLatestLedgerResponse data = await server.getLatestLedger();
       return data.sequence ?? 0;
-    } catch (_) {
+    } catch (e, stacktrace) {
+      stdout.writeln('Error:\n$e\nStacktrace:\n$stacktrace');
       return 0;
     }
   }
