@@ -43,6 +43,45 @@ Future<List<CowchainFarmEvent>> readJob(String jobTitle) async {
   return decodedEventList;
 }
 
+/// [saveLatestLedger]
+/// Save latest ledger to disk
+Future<void> saveLatestLedger(int latestLedger, String ledgerTitle) async {
+  // String to write
+  String json = latestLedger.toString();
+
+  // Get path
+  Directory current = Directory.current;
+  String currentPath = current.path;
+  String filePath = '$currentPath/notification/$ledgerTitle.txt';
+
+  // Write file
+  File myFile = await File(filePath).create(recursive: true);
+  IOSink sink = myFile.openWrite();
+  sink.write(json);
+  await sink.flush();
+  await sink.close();
+}
+
+/// [readLatestLedger]
+/// Read latest ledger from disk
+Future<int> readLatestLedger(String ledgerTitle) async {
+  // Get path
+  Directory current = Directory.current;
+  String currentPath = current.path;
+  String filePath = '$currentPath/notification/$ledgerTitle.txt';
+
+  // Check file existence
+  bool isFileExist = await File(filePath).exists();
+  if (!isFileExist) return 0;
+
+  // Read file
+  File myFile = File(filePath);
+  String contents = await myFile.readAsString();
+  int latestLedger = int.tryParse(contents) ?? 0;
+
+  return latestLedger;
+}
+
 /// [CowchainFarmEvent]
 /// Cowchain Farm Soroban contract event
 class CowchainFarmEvent {

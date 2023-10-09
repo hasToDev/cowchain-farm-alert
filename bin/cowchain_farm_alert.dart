@@ -9,6 +9,7 @@ import 'package:http/http.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 import 'package:cowchain_farm_alert/other.dart';
 
+const String jobLedger = 'ledger';
 const String jobAuction = 'auction';
 const String jobActivities = 'activities';
 
@@ -133,8 +134,18 @@ void main(List<String> arguments) async {
       // Listen to Cowchain Farm Contract Event
       bool starting = true;
       num interval = num.tryParse(results['interval']) ?? 0;
-      int latestLedger = 0;
+      int latestLedger = await readLatestLedger(jobLedger);
       int nextJobLedger = 0;
+
+      // Initial value stdout
+      stdout.writeln('------------------------------------');
+      stdout.writeln('Cowchain Farm Notification');
+      stdout.writeln('------------------------------------');
+      stdout.writeln('Auction    : ${auctionNotificationJob.length}');
+      stdout.writeln('Activities : ${activitiesNotificationJob.length}');
+      stdout.writeln('Ledger     : $latestLedger');
+      stdout.writeln('------------------------------------');
+      stdout.writeln('');
 
       while (starting) {
         DateTime now = DateTime.now();
@@ -152,6 +163,7 @@ void main(List<String> arguments) async {
           } else {
             // Update latest ledger
             latestLedger = int.tryParse(currentLedger!) ?? 0;
+            await saveLatestLedger(latestLedger, jobLedger);
 
             // Initialize next job ledger
             if (nextJobLedger == 0) {
