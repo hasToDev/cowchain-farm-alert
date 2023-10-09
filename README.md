@@ -33,7 +33,7 @@ While the Cowchain Farm web app will cover the following:
 
 And the latest addition is the Cowchain Farm notification service, which includes:
 
-1. Ingesting events from Soroban smart contracts using [Darts CLI](https://dart.dev/tutorials/server/get-started) with [Flutter Stellar SDK](https://pub.dev/packages/stellar_flutter_sdk)
+1. Ingesting events from Soroban smart contracts using [Dart CLI](https://dart.dev/tutorials/server/get-started) with [Flutter Stellar SDK](https://pub.dev/packages/stellar_flutter_sdk)
 2. Sending notifications to Cowchain Farm users using [OneSignal](https://onesignal.com)
 
 ## Get Started
