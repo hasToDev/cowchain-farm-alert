@@ -42,7 +42,7 @@ This article is specifically about the Dart CLI notification service for Cowchai
 
 Discussion for Cowchain Farm smart contract is in the [Cowchain Farm Soroban repository](https://github.com/hasToDev/cowchain-farm-soroban), and the discussion for Cowchain Farm web app is in the [Cowchain Farm App repository](https://github.com/hasToDev/cowchain-farm-app).
 
-The Cowchain Farm web app in this repository was developed using `Flutter version 3.13.5` and `Dart version 3.1.2`
+The Cowchain Farm Dart CLI in this repository was developed using `Dart version 3.1.2`
 
 ## Prerequisites
 
@@ -90,7 +90,7 @@ You need to run the compiler three times on three different machines to create e
 To overcome this limitation, we use a continuous integration (CI) provider that supports all three operating systems, [Codemagic](https://codemagic.io/start/).
 You can also follow [this](https://blog.codemagic.io/cross-compiling-dart-cli-applications-with-codemagic/) articles to learn how to Cross-compiling Dart CLI applications with Codemagic.
 
-For the Cowchain Farm notification service, we choose to deploy the Dart CLI inside a Docker container in a cloud server that runs Ubuntu.
+For the Cowchain Farm notification service, we choose to deploy the Dart CLI inside a [Docker](https://www.docker.com) container in a [cloud server](https://www.vultr.com/?ref=9253209) that runs [Ubuntu](https://ubuntu.com/).
 
 The following are the files used to carry out the deployment apart from the compiled Dart CLI:
 
