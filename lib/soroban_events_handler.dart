@@ -83,7 +83,7 @@ class SorobanEventsHandler {
       }
 
       // Event data
-      XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(info.value.xdr);
+      XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(info.value);
       if (xdrSCVal.map == null) continue;
 
       // Filter for specific topic

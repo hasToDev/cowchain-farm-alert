@@ -383,11 +383,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "55cfe3897042c551e85f661709ceeb6bad4d3cae"
-      resolved-ref: "55cfe3897042c551e85f661709ceeb6bad4d3cae"
+      ref: cli-build-support
+      resolved-ref: "42f4e89b4b2b7f6f5ae5714927d5f687c406fc5b"
       url: "https://github.com/hasToDev/stellar_flutter_sdk.git"
     source: git
-    version: "1.6.5"
+    version: "1.6.6"
   stream_channel:
     dependency: transitive
     description:

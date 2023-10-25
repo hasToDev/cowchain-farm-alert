@@ -112,7 +112,7 @@ void main(List<String> arguments) async {
       List<CowchainFarmEvent> activitiesNotificationJob = await readJob(jobActivities);
 
       SorobanServer sorobanServer = SorobanServer('https://soroban-testnet.stellar.org:443');
-      sorobanServer.dioOverrides = true;
+      sorobanServer.httpOverrides = true;
       String contractADDRESS = results['soroban-contract-address'];
       String contractID = StrKey.decodeContractIdHex(results['soroban-contract-address']);
 

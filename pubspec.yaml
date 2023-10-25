@@ -17,7 +17,7 @@ dependencies:
     git:
       # when using CodeMagic, always use HTTPS for github instead of GIT
       url: https://github.com/hasToDev/stellar_flutter_sdk.git
-      ref: 55cfe3897042c551e85f661709ceeb6bad4d3cae
+      ref: cli-build-support
 
 #dependency_overrides:
 #  stellar_flutter_sdk:
