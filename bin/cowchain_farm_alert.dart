@@ -159,6 +159,7 @@ void main(List<String> arguments) async {
 
           if (error != null) {
             stdout.writeln(error);
+            if (error.contains('start is before oldest ledger')) latestLedger = 0;
             await Future.delayed(const Duration(seconds: 5));
           } else {
             // Update latest ledger
